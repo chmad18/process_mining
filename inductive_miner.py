@@ -246,16 +246,11 @@ def compare_statistics_to_expected_and_save(actual_file_path, expected_file_path
     # Save the DataFrame to a CSV file
     comparison_df.to_csv(output_file_path)
 
-# Example usage:
-# comparisons = compare_statistics_to_expected('path_to_actual_results.csv', 'path_to_expected_results.csv')
-
 
 # Example usage:
-# comparisons = compare_statistics_to_expected('path_to_actual_results.csv', 'path_to_expected_results.csv')
-
-
-# Example usage:
-comparisons = compare_statistics_to_expected_and_save('process_mining_results_expanded.csv', 'expected_results_expanded.csv', 'comparison_analysis.csv')
+compare_statistics_to_expected_and_save('process_mining_results_expanded.csv',
+                                        'expected_results_expanded.csv',
+                                        'comparison_analysis.csv')
 
 
 
