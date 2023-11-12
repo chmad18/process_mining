@@ -6,7 +6,6 @@ from pm4py.statistics.end_activities.log.get import get_end_activities
 from pm4py.objects.log.importer.xes import importer as xes_importer
 import pandas as pd
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
-from scipy import stats
 
 
 def calculate_statistics(event_log):
@@ -97,7 +96,7 @@ def calculate_fitness(event_log, net, initial_marking, final_marking):
     return fitness
 
 # List of log file paths
-log_files = ['Scenario1/logNormal.xes', 'Scenario1/logFreq.xes', 'Scenario1/logDur.xes']
+log_files = ['Scenario1/logNormal.xes']
 
 # Dictionary to hold the results for comparison
 results = []
@@ -107,7 +106,7 @@ for log_file in log_files:
     # Load the event log
     log = xes_importer.apply(log_file)
 
-    visual_file_name = f"{log_file.split('.')[0].split('/')[1]}_petri_net.png"
+    visual_file_name = f"normalized_petri_net.png"
     process_discovery_and_visualization(log, visual_file_name)
 
     # Discover a process model using the Inductive Miner
@@ -136,7 +135,7 @@ for log_file in log_files:
 df_results = pd.DataFrame(results)
 
 # Save the DataFrame to a CSV file
-df_results.to_csv('process_mining_results.csv', index=False)
+df_results.to_csv('expected_results.csv', index=False)
 
 
 def expand_dict_column(data, column_name):
@@ -159,104 +158,30 @@ for column in columns_to_expand:
 df_results = pd.DataFrame(results)
 
 # Save the DataFrame to a CSV file
-df_results.to_csv('process_mining_results_expanded.csv', index=False)
+df_results.to_csv('expected_results_expanded.csv', index=False)
 
 # Optionally, print out the DataFrame
 print(df_results)
 
 
-# def compare_statistics_to_expected(actual_file_path, expected_file_path):
-#     # Read the CSV files into DataFrames
-#     actual_df = pd.read_csv(actual_file_path)
-#     expected_df = pd.read_csv(expected_file_path)
-#
-#     # Assuming the first row of expected_df contains the expected results
-#     expected_stats = expected_df.iloc[0]
-#
-#     # Dictionary to hold comparison results for each log
-#     all_comparisons = {}
-#
-#     # Iterate through each row in actual_df for comparison
-#     for index, actual_row in actual_df.iterrows():
-#         log_file = actual_row['log_file']
-#         comparison_results = {}
-#
-#         # Iterate through each column for comparison
-#         for column in actual_row.index:
-#             if column in expected_stats.index and column not in ['log_file', 'fitness']:
-#                 actual_value = actual_row[column]
-#                 expected_value = expected_stats[column]
-#
-#                 # Calculate absolute and percentage difference
-#                 diff = actual_value - expected_value
-#                 abs_diff = abs(diff)
-#                 percent_diff = (abs_diff / expected_value) * 100 if expected_value != 0 else float('inf')
-#
-#                 comparison_results[column] = {
-#                     'difference': diff,
-#                     'absolute_difference': abs_diff,
-#                     'percentage_difference': percent_diff
-#                 }
-#
-#         all_comparisons[log_file] = comparison_results
-#
-#     return all_comparisons
+def compare_statistics_to_expected(actual_statistics, expected_statistics):
+    comparison_results = {}
 
-def compare_statistics_to_expected_and_save(actual_file_path, expected_file_path, output_file_path):
-    # Read the CSV files into DataFrames
-    actual_df = pd.read_csv(actual_file_path)
-    expected_df = pd.read_csv(expected_file_path)
+    # Iterate through each key in actual statistics
+    for key, actual_value in actual_statistics.items():
+        if key in expected_statistics:
+            expected_value = expected_statistics[key]
 
-    # Assuming the first row of expected_df contains the expected results
-    expected_stats = expected_df.iloc[0]
+            # Assuming normal distribution, use a statistical test (e.g., t-test) for comparison
+            # Note: This is a simplification, and you should ensure the distribution assumptions are valid
+            t_stat, p_value = stats.ttest_ind_from_stats(
+                mean1=actual_value['mean'], std1=actual_value['std'], nobs1=actual_value['count'],
+                mean2=expected_value['mean'], std2=expected_value['std'], nobs2=expected_value['count']
+            )
 
-    # Dictionary to hold comparison results for each log
-    all_comparisons = {}
+            comparison_results[key] = {
+                't_statistic': t_stat,
+                'p_value': p_value
+            }
 
-    # Iterate through each row in actual_df for comparison
-    for index, actual_row in actual_df.iterrows():
-        log_file = actual_row['log_file']
-        comparison_results = {}
-
-        # Iterate through each column for comparison
-        for column in actual_row.index:
-            if column in expected_stats.index and column not in ['log_file', 'fitness']:
-                actual_value = actual_row[column]
-                expected_value = expected_stats[column]
-
-                # Calculate absolute and percentage difference
-                diff = actual_value - expected_value
-                abs_diff = abs(diff)
-                percent_diff = (abs_diff / expected_value) * 100 if expected_value != 0 else float('inf')
-
-                comparison_results[column] = {
-                    'difference': diff,
-                    'absolute_difference': abs_diff,
-                    'percentage_difference': percent_diff
-                }
-
-        all_comparisons[log_file] = comparison_results
-
-    # Convert the comparisons dictionary to a DataFrame
-    comparison_df = pd.DataFrame.from_dict({(i,j): all_comparisons[i][j]
-                                            for i in all_comparisons.keys()
-                                            for j in all_comparisons[i].keys()},
-                                           orient='index')
-
-    # Save the DataFrame to a CSV file
-    comparison_df.to_csv(output_file_path)
-
-# Example usage:
-# comparisons = compare_statistics_to_expected('path_to_actual_results.csv', 'path_to_expected_results.csv')
-
-
-# Example usage:
-# comparisons = compare_statistics_to_expected('path_to_actual_results.csv', 'path_to_expected_results.csv')
-
-
-# Example usage:
-comparisons = compare_statistics_to_expected_and_save('process_mining_results_expanded.csv', 'expected_results_expanded.csv', 'comparison_analysis.csv')
-
-
-
-
+    return comparison_results

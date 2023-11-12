@@ -24,5 +24,10 @@
 4. Choose "Text to Columns".
 5. Select "Delimited" ("afgrænset") and click Next.
    6. Check "Comma" and click Next until you finish the wizard.
+7. Open "comparison_analysis.csv" and apply the same logic. 
+   8. You might need to go set number seperator (thousands, decimal),
+      9. file -> settings
+      10. advanced
+      11. uncheck "system seperator" and reverse the default values in the below now editable boxes
 
 
