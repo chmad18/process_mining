@@ -45,13 +45,12 @@ def calculate_statistics(event_log):
         bathroom_frequency_per_night.append(bathroom_count)
         sleep_frequency_per_night.append(sleep_count)
 
-    # Calculate enhanced statistical measures for each activity
+    # Calculate mean and median duration for each activity
     for act_name in activities_durations:
         durations_series = pd.Series(activities_durations[act_name])
         activities_durations[act_name] = {
             'mean': durations_series.mean(),
             'median': durations_series.median(),
-            'std': durations_series.std(),
             'min': durations_series.min(),
             'max': durations_series.max()
         }
@@ -136,29 +135,6 @@ df_results = pd.DataFrame(results)
 
 # Save the DataFrame to a CSV file
 df_results.to_csv('process_mining_results.csv', index=False)
-
-
-def expand_dict_column(data, column_name):
-    expanded_data = []
-    for entry in data:
-        expanded_entry = entry.copy()
-        dict_values = expanded_entry.pop(column_name, {})
-        for key, value in dict_values.items():
-            expanded_entry[f"{column_name}_{key}"] = value
-        expanded_data.append(expanded_entry)
-    return expanded_data
-
-
-# Expanding the dictionary columns in the results list
-columns_to_expand = ['mean_duration', 'median_duration', 'min_duration', 'max_duration']
-for column in columns_to_expand:
-    results = expand_dict_column(results, column)
-
-# Convert the expanded results to a DataFrame
-df_results = pd.DataFrame(results)
-
-# Save the DataFrame to a CSV file
-df_results.to_csv('process_mining_results_expanded.csv', index=False)
 
 # Optionally, print out the DataFrame
 print(df_results)
