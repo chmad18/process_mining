@@ -10,6 +10,7 @@
 4. Install the required packages: `pip install -r requirements.txt`
 5. Run the `inductive_generate_norm_model.py` to generate comparison file
 5. Run the `inductive_miner.py` script.
+6. If you get error like "module not found" make sure the python interpreter is set to the one of the virtual environment
 
 ## Show Data in Excel
 
