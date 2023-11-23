@@ -1,0 +1,2 @@
+log_file,fitness,mean_total_night_sleep_time,mean_total_night_bathroom_time,mean_bathroom_frequency_per_night,mean_sleep_frequency_per_night,mean_duration_Sleep,mean_duration_Bathroom,mean_duration_Get_up,median_duration_Sleep,median_duration_Bathroom,median_duration_Get_up,min_duration_Sleep,min_duration_Bathroom,min_duration_Get_up,max_duration_Sleep,max_duration_Bathroom,max_duration_Get_up
+Scenario1/logNormal.xes,1.0,30784.139972999998,481.727327,1.01,2.01,15315.492523880597,476.9577495049505,120.797,13401.712,476.172,120.0,7217.971,360.228,40.0,32389.555,599.703,200.0
