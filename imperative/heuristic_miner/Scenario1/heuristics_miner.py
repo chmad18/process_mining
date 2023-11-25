@@ -13,13 +13,18 @@ def calculate_statistics(event_log):
     activities_durations = {}
     total_night_sleep_times = []
     total_night_bathroom_times = []
+    total_get_Up_times = []
     bathroom_frequency_per_night = []
     sleep_frequency_per_night = []
+    get_up_frequency_per_night = []
+
 
     for trace in event_log:
         total_sleep_time = 0
         total_bathroom_time = 0
+        total_get_up_time = 0
         bathroom_count = 0
+        get_up_count = 0
         sleep_count = 0
 
         for event in trace:
@@ -38,11 +43,16 @@ def calculate_statistics(event_log):
                 elif act_name == 'Bathroom':
                     total_bathroom_time += duration
                     bathroom_count += 1
+                elif act_name == 'Get_Up':
+                    total_get_up_time += duration
+                    get_up_count += 1
 
         total_night_sleep_times.append(total_sleep_time)
+        sleep_frequency_per_night.append(sleep_count)
         total_night_bathroom_times.append(total_bathroom_time)
         bathroom_frequency_per_night.append(bathroom_count)
-        sleep_frequency_per_night.append(sleep_count)
+        get_up_frequency_per_night.append(total_get_up_time)
+        total_get_Up_times.append(get_up_count)
 
     # Calculate enhanced statistical measures for each activity
     for act_name in activities_durations:
@@ -58,6 +68,7 @@ def calculate_statistics(event_log):
     mean_total_night_sleep_time = pd.Series(total_night_sleep_times).mean()
     mean_total_night_bathroom_time = pd.Series(total_night_bathroom_times).mean()
     mean_bathroom_frequency = pd.Series(bathroom_frequency_per_night).mean()
+    mean_get_up_frequency = pd.Series(get_up_frequency_per_night).mean()
     mean_sleep_frequency = pd.Series(sleep_frequency_per_night).mean()
 
     statistics = {
@@ -67,7 +78,8 @@ def calculate_statistics(event_log):
         'mean_total_night_sleep_time': mean_total_night_sleep_time,
         'mean_total_night_bathroom_time': mean_total_night_bathroom_time,
         'mean_bathroom_frequency_per_night': mean_bathroom_frequency,
-        'mean_sleep_frequency_per_night': mean_sleep_frequency
+        'mean_sleep_frequency_per_night': mean_sleep_frequency,
+        'mean_get_up_frequency': mean_get_up_frequency
     }
 
     return statistics
@@ -130,6 +142,7 @@ for log_file in log_files:
         'mean_total_night_bathroom_time': statistics['mean_total_night_bathroom_time'],
         'mean_bathroom_frequency_per_night': statistics['mean_bathroom_frequency_per_night'],
         'mean_sleep_frequency_per_night': statistics['mean_sleep_frequency_per_night'],
+        'mean_get_up_frequency_per_night': statistics['mean_get_up_frequency'],
     })
 
 

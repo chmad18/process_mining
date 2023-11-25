@@ -12,14 +12,28 @@ def calculate_statistics(event_log):
     end_act_freq = get_end_activities(event_log)
     activities_durations = {}
     total_eating_duration = []
+    total_leave_duration = []
+    total_enter_duration = []
+    total_relax_duration = []
     eating_absence_frequency = 0
     average_lunch_start_time = []
     average_dinner_start_time = []
+    eat_frequency_per_night = []
+    leave_frequency_per_night = []
+    enter_frequency_per_night = []
+    relax_frequency_per_night = []
 
     for trace in event_log:
         total_eat_time = 0
+        total_leave_time = 0
+        total_enter_time = 0
+        total_relax_time = 0
         lunch_time = None
         dinner_time = None
+        eat_count = 0
+        leave_count = 0
+        enter_count = 0
+        relax_count = 0
 
         for event in trace:
             act_name = event["concept:name"]
@@ -32,13 +46,36 @@ def calculate_statistics(event_log):
                 activities_durations[act_name].append(duration)
 
                 if act_name == 'Eat':
+                    eat_count += 1
                     total_eat_time += duration
                     if start_timestamp.hour <= 15:  # Assuming lunch
                         lunch_time = start_timestamp
                     else:  # Assuming dinner
                         dinner_time = start_timestamp
+                elif act_name == 'Leave':
+                    leave_count += 1
+                    total_leave_time += duration
+                elif act_name == 'Enter':
+                    enter_count += 1
+                    total_enter_time += duration
+                elif act_name == 'Relax':
+                    relax_count += 1
+                    total_relax_time += duration
+
+        eat_frequency_per_night.append(eat_count)
+        leave_frequency_per_night.append(leave_count)
+        enter_frequency_per_night.append(enter_count)
+        relax_frequency_per_night.append(relax_count)
+
+        mean_eat_frequency = pd.Series(eat_frequency_per_night).mean()
+        mean_leave_frequency = pd.Series(leave_frequency_per_night).mean()
+        mean_enter_frequency = pd.Series(enter_frequency_per_night).mean()
+        mean_relax_frequency = pd.Series(relax_frequency_per_night).mean()
 
         total_eating_duration.append(total_eat_time)
+        total_leave_duration.append(total_leave_time)
+        total_enter_duration.append(total_enter_time)
+        total_relax_duration.append(total_relax_time)
         if lunch_time:
             average_lunch_start_time.append(lunch_time)
         else:
@@ -61,6 +98,9 @@ def calculate_statistics(event_log):
         }
 
     mean_total_eating_duration = pd.Series(total_eating_duration).mean()
+    mean_total_leave_duration = pd.Series(total_leave_duration).mean()
+    mean_total_enter_duration = pd.Series(total_enter_duration).mean()
+    mean_total_relax_duration = pd.Series(total_relax_duration).mean()
     mean_lunch_start_time = pd.Series(average_lunch_start_time).mean()
     mean_dinner_start_time = pd.Series(average_dinner_start_time).mean()
 
@@ -69,9 +109,16 @@ def calculate_statistics(event_log):
         'end_activities': end_act_freq,
         'activities_durations': activities_durations,
         'mean_total_eating_duration': mean_total_eating_duration,
+        'mean_total_leave_duration': mean_total_leave_duration,
+        'mean_total_enter_duration': mean_total_enter_duration,
+        'mean_total_relax_duration': mean_total_relax_duration,
         'eating_absence_frequency': eating_absence_frequency,
         'mean_lunch_start_time': mean_lunch_start_time,
-        'mean_dinner_start_time': mean_dinner_start_time
+        'mean_dinner_start_time': mean_dinner_start_time,
+        'mean_eat_frequency': mean_eat_frequency,
+        'mean_leave_frequency': mean_leave_frequency,
+        'mean_enter_frequency': mean_enter_frequency,
+        'mean_relax_frequency': mean_relax_frequency,
     }
 
     return statistics
@@ -133,7 +180,11 @@ for log_file in log_files:
         'mean_total_eating_duration': statistics['mean_total_eating_duration'],
         'eating_absence_frequency': statistics['eating_absence_frequency'],
         'mean_lunch_start_time': statistics['mean_lunch_start_time'],
-        'mean_dinner_start_time': statistics['mean_dinner_start_time']
+        'mean_dinner_start_time': statistics['mean_dinner_start_time'],
+        'mean_eat_frequency': statistics['mean_eat_frequency'],
+        'mean_leave_frequency': statistics['mean_leave_frequency'],
+        'mean_enter_frequency': statistics['mean_enter_frequency'],
+        'mean_relax_frequency': statistics['mean_relax_frequency'],
     })
 
 
