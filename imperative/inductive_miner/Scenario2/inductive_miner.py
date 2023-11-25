@@ -114,6 +114,10 @@ for log_file in log_files:
     # Load the event log
     log = xes_importer.apply(log_file)
 
+    reference_model_log = xes_importer.apply('Scenario2/logNormal.xes')
+    reference_process_tree = inductive_miner.apply(reference_model_log)
+    reference_net, reference_initial_marking, reference_final_marking = pt_converter.apply(reference_process_tree)
+
     visual_file_name = f"results/{log_file.split('.')[0].split('/')[1]}_petri_net.png"
     process_discovery_and_visualization(log, visual_file_name)
 
@@ -122,7 +126,7 @@ for log_file in log_files:
     net, initial_marking, final_marking = pt_converter.apply(process_tree)
 
     # Calculate fitness and statistics
-    fitness = calculate_fitness(log, net, initial_marking, final_marking)
+    fitness = calculate_fitness(log, reference_net, reference_initial_marking, reference_final_marking)
     statistics = calculate_statistics(log)
 
     # Store the results for this log
