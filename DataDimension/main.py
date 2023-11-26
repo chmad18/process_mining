@@ -1,9 +1,8 @@
 from filehandler import read_from_file, files_dictionary
-from datadimension import get_statistics_per_trace, get_frequency_fitness, get_duration_fitness_kde, get_duration_fitness_ChiSquared, get_frequency_fitness_kde
+from datadimension import get_statistics_per_trace, get_frequency_fitness, get_duration_fitness_kde #, get_duration_fitness_ChiSquared, get_frequency_fitness_kde
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as stats
-import statsmodels.api as sm
 import os
 my_path = os.getcwd()
 
@@ -32,7 +31,7 @@ for scenario in files_dictionary:
     aggregated_freq_stats = freq_stats.agg(['mean', 'std', 'min', 'max', 'median'])
     expected_frequencies = aggregated_freq_stats.loc['mean']
 
-    #Check Normal Distribution Assumption. Saves Histogram to the specified folders. The plot contains the P value and if the normal distribution is accepted or not
+    # Check Normal Distribution Assumption. Saves Histogram to the specified folders. The plot contains the P value and if the normal distribution is accepted or not
     alpha = 0.05
     logName = log_file_normal.removesuffix('.xes').replace('/', '\\')
     for activity in all_activities:
@@ -71,43 +70,6 @@ for scenario in files_dictionary:
         log_enriched = read_from_file(log_file_enriched)
         statistics_enriched_df = get_statistics_per_trace(log_enriched)
 
-        #Duration - KDE
-        duration_fitness_value = get_duration_fitness_kde(statistics_enriched_df, duration_stats, all_activities)
-        duration_row = pd.DataFrame([
-            {'Scenario' : scenario,
-            'Normal Log': log_file_normal,
-            'Enriched Log': log_file_enriched,
-            'Fitness Value': duration_fitness_value
-            }])
-
-        kde_duration_df = pd.concat([kde_duration_df, duration_row], ignore_index=True)
-
-        #Frequency - KDE
-        freq_fitness_value_kde = get_frequency_fitness_kde(statistics_enriched_df, freq_stats, all_activities)
-        freq_row_kde = pd.DataFrame([
-            {'Scenario' : scenario,
-            'Normal Log': log_file_normal,
-            'Enriched Log': log_file_enriched,
-            'Fitness Value': freq_fitness_value_kde
-            }])
-
-        kde_frequency_df = pd.concat([kde_frequency_df, freq_row_kde], ignore_index=True)
-
-        #Duration - Chi-Squared
-        chi2_stat_dur, p_value_chi_dur, fitness_value_chi_dur = get_duration_fitness_ChiSquared(statistics_enriched_df, expected_durations, all_activities)
-
-        duration_row_chi = pd.DataFrame([
-            {'Scenario' : scenario,
-            'Normal Log': log_file_normal,
-            'Enriched Log': log_file_enriched,
-            'Fitness Value': fitness_value_chi_dur,
-            'P Value' : p_value_chi_dur,
-            'Chi Stat' : chi2_stat_dur}])
-        
-        chi_duration_df = pd.concat([chi_duration_df, duration_row_chi], ignore_index=True)
-
-        
-        
         #Frequency - Chi-Squared
         chi2_stat, p_value, fitness_value = get_frequency_fitness(statistics_enriched_df, expected_frequencies, all_activities)
 
@@ -120,6 +82,42 @@ for scenario in files_dictionary:
             'Chi Stat' : chi2_stat}])
         
         frequency_df = pd.concat([frequency_df, frequency_row], ignore_index=True)
+
+        #Duration - KDE
+        duration_fitness_value = get_duration_fitness_kde(statistics_enriched_df, duration_stats, all_activities, logName)
+        duration_row = pd.DataFrame([
+            {'Scenario' : scenario,
+            'Normal Log': log_file_normal,
+            'Enriched Log': log_file_enriched,
+            'Fitness Value': duration_fitness_value
+            }])
+
+        kde_duration_df = pd.concat([kde_duration_df, duration_row], ignore_index=True)
+
+        # #Frequency - KDE
+        # freq_fitness_value_kde = get_frequency_fitness_kde(statistics_enriched_df, freq_stats, all_activities, logName)
+        # freq_row_kde = pd.DataFrame([
+        #     {'Scenario' : scenario,
+        #     'Normal Log': log_file_normal,
+        #     'Enriched Log': log_file_enriched,
+        #     'Fitness Value': freq_fitness_value_kde
+        #     }])
+
+        # kde_frequency_df = pd.concat([kde_frequency_df, freq_row_kde], ignore_index=True)
+
+        # #Duration - Chi-Squared
+        # chi2_stat_dur, p_value_chi_dur, fitness_value_chi_dur = get_duration_fitness_ChiSquared(statistics_enriched_df, expected_durations, all_activities)
+
+        # duration_row_chi = pd.DataFrame([
+        #     {'Scenario' : scenario,
+        #     'Normal Log': log_file_normal,
+        #     'Enriched Log': log_file_enriched,
+        #     'Fitness Value': fitness_value_chi_dur,
+        #     'P Value' : p_value_chi_dur,
+        #     'Chi Stat' : chi2_stat_dur}])
+        
+        # chi_duration_df = pd.concat([chi_duration_df, duration_row_chi], ignore_index=True)
+
 
 
 chi_duration_df.to_excel('DataDimension/Results/ChiSquared/duration_results.xlsx')
