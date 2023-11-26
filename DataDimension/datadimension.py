@@ -1,21 +1,32 @@
 import pandas as pd
 from scipy.stats import gaussian_kde
 from filehandler import debugger_is_active
-import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy.stats import poisson
 import numpy as np
 from scipy.stats import chisquare
 import pandas as pd
-from scipy.stats import mannwhitneyu
-from scipy.stats import ks_2samp
+import os
+my_path = os.getcwd()
 
-def get_duration_fitness_kde(statistics_enriched_df, statistics_reference_df, all_activities):
+def get_duration_fitness_kde(statistics_enriched_df, statistics_reference_df, all_activities, fileName):
     kde_models = {}
     for activity in all_activities:
         data = statistics_reference_df[activity].tolist()
         kde_model = gaussian_kde(data)
         kde_models[activity] = kde_model
+        # Plotting the KDE for the reference model
+        values = np.linspace(min(data), max(data), 1000)
+        densities = kde_model(values)
+
+        plt.figure()
+        plt.plot(values, densities, label=f'KDE of {activity}')
+        plt.title(f'KDE for Activity: {activity}')
+        plt.xlabel('Duration')
+        plt.ylabel('Density')
+        plt.legend()
+        enrichedFileName = 'DataDimension\\Results\\KDE\\Plots\\'+ fileName + '_' + activity + '_duration.png'
+        plt.savefig(os.path.join(my_path, enrichedFileName))
+        plt.close()
 
     fitness_scores = {}
     for trace_id, trace_data in statistics_enriched_df.groupby('TraceID'):
@@ -45,142 +56,46 @@ def get_duration_fitness_kde(statistics_enriched_df, statistics_reference_df, al
 
     return overall_fitness
 
+# def get_frequency_fitness_kde(statistics_enriched_df, statistics_reference_df, all_activities):
+#     freq_stats = statistics_enriched_df.groupby(['TraceID', 'Activity']).size().unstack(fill_value=0).reindex(columns=all_activities, fill_value=0)
+#     kde_models = {}
+#     activities_to_skip = []
+#     for activity in all_activities:
+#         data = freq_stats[activity].tolist()
+#         if(len(set(data))==1):
+#             activities_to_skip.append(activity)
+#             continue
+#         kde_model = gaussian_kde(data)
+#         kde_models[activity] = kde_model
 
+#     fitness_scores = {}
+#     for trace_id, trace_data in freq_stats.groupby('TraceID'):
+#         trace_fitness = []
+#         for activity in all_activities:
+#             if activity in activities_to_skip:
+#                 continue
+#             test_data = trace_data[activity]
+#             # Check if test data is not empty
+#             if not test_data.empty:
+#                 original_data = freq_stats[activity].tolist()
+#                 # Evaluate probability densities
+#                 kde_model = kde_models[activity]
+#                 densities = kde_model(test_data)
 
+#                 # Normalize the densities
+#                 normalized_densities = densities / max(kde_model(np.linspace(min(original_data), max(original_data), 1000)))
 
-    # # Group by TraceID and Activity, then count the frequency of each activity per trace
-    # activity_duration_per_trace = statistics_enriched_df.groupby(['TraceID', 'Activity'])['Duration'].sum().unstack(fill_value=0).reindex(columns=all_activities, fill_value=0)
-
-    # reference_kdes = {}
-    # normalized_kde_values = {}
-    # activity_duration_values = {}
-    # fitness_values = []
-    # for activity in all_activities:
-    #     activity_data = expected_durations[activity].tolist()
-    #     reference_kde = gaussian_kde(activity_data)
-    #     reference_kdes[activity] = reference_kde
-
-
-    #     test_activity_data = activity_duration_per_trace[activity].tolist()
-    #     min_val = min([min(activity_data), min(test_activity_data)])
-    #     max_val = max([max(activity_data), max(test_activity_data)])
-
-    #     duration_values = np.linspace(start=min_val, stop=max_val, num=1000)
-    #     activity_duration_values[activity] = duration_values
-
-
-    #     kde_values = reference_kde.evaluate(duration_values)
-    #     max_kde_value = max(kde_values)
-    #     normalized_kde_values[activity] = kde_values / max_kde_value
-
-    # duration_results = pd.DataFrame()
-    # for trace_id, trace_data in activity_duration_per_trace.iterrows():
-    #     fitnessv = []
-    #     for activity in all_activities:
-    #         duration_values = activity_duration_values[activity]
-    #         reference_kde = reference_kdes[activity]
-    #         normalized_kde_value = normalized_kde_values[activity]
-    #         duration = trace_data.get(activity, 0)
-
-    #         fitness_value = np.interp(duration, duration_values, normalized_kde_value)
-    #         fitnessv.append(fitness_value)
+#                 # Example fitness calculation (can be modified)
+#                 trace_fitness.append(np.mean(normalized_densities))
         
-    #     average_fitness = sum(fitnessv) / len(fitnessv)
-    #     fitness_values.append(average_fitness)
-    
-    
-    # return sum(fitness_values) / len(fitness_values)
+#     # Normalize and aggregate score for each trace
+#     fitness_scores[trace_id] = np.mean(trace_fitness) if trace_fitness else 0
 
-def get_frequency_fitness_kde(statistics_enriched_df, statistics_reference_df, all_activities):
-    freq_stats = statistics_enriched_df.groupby(['TraceID', 'Activity']).size().unstack(fill_value=0).reindex(columns=all_activities, fill_value=0)
-    kde_models = {}
-    activities_to_skip = []
-    for activity in all_activities:
-        data = freq_stats[activity].tolist()
-        if(len(set(data))==1):
-            activities_to_skip.append(activity)
-            continue
-        kde_model = gaussian_kde(data)
-        kde_models[activity] = kde_model
+#     # Overall fitness score for the test log
+#     overall_fitness = np.mean(list(fitness_scores.values()))
 
-    fitness_scores = {}
-    for trace_id, trace_data in freq_stats.groupby('TraceID'):
-        trace_fitness = []
-        for activity in all_activities:
-            if activity in activities_to_skip:
-                continue
-            test_data = trace_data[activity]
-            # Check if test data is not empty
-            if not test_data.empty:
-                original_data = freq_stats[activity].tolist()
-                # Evaluate probability densities
-                kde_model = kde_models[activity]
-                densities = kde_model(test_data)
+#     return overall_fitness
 
-                # Normalize the densities
-                normalized_densities = densities / max(kde_model(np.linspace(min(original_data), max(original_data), 1000)))
-
-                # Example fitness calculation (can be modified)
-                trace_fitness.append(np.mean(normalized_densities))
-        
-    # Normalize and aggregate score for each trace
-    fitness_scores[trace_id] = np.mean(trace_fitness) if trace_fitness else 0
-
-    # Overall fitness score for the test log
-    overall_fitness = np.mean(list(fitness_scores.values()))
-
-    return overall_fitness
-    #  # Group by TraceID and Activity, then count the frequency of each activity per trace
-    # activity_duration_per_trace = statistics_enriched_df.groupby(['TraceID', 'Activity']).size().unstack(fill_value=0).reindex(columns=all_activities, fill_value=0)
-
-    # activities_to_skip = []
-    # reference_kdes = {}
-    # normalized_kde_values = {}
-    # activity_duration_values = {}
-    # fitness_values = []
-    # for activity in all_activities:
-    #     activity_data = expected_durations[activity].tolist()
-    #     if(len(set(activity_data)) == 1):
-    #         activities_to_skip.append(activity)
-    #         continue
-    #     reference_kde = gaussian_kde(activity_data)
-    #     reference_kdes[activity] = reference_kde
-
-
-    #     test_activity_data = activity_duration_per_trace[activity].tolist()
-    #     min_val = min([min(activity_data), min(test_activity_data)])
-    #     max_val = max([max(activity_data), max(test_activity_data)])
-
-    #     duration_values = np.linspace(start=min_val, stop=max_val, num=1000)
-    #     activity_duration_values[activity] = duration_values
-
-
-    #     kde_values = reference_kde.evaluate(duration_values)
-    #     max_kde_value = max(kde_values)
-    #     normalized_kde_values[activity] = kde_values / max_kde_value
-
-    # duration_results = pd.DataFrame()
-    # for trace_id, trace_data in activity_duration_per_trace.iterrows():
-    #     fitnessv = []
-    #     for activity in all_activities:
-    #         if activity in activities_to_skip:
-    #             continue
-    #         duration_values = activity_duration_values[activity]
-    #         reference_kde = reference_kdes[activity]
-    #         normalized_kde_value = normalized_kde_values[activity]
-    #         duration = trace_data.get(activity, 0)
-
-    #         fitness_value = np.interp(duration, duration_values, normalized_kde_value)
-    #         fitnessv.append(fitness_value)
-        
-    #     if(len(fitnessv) == 0):
-    #         fitness_values.append(0)
-    #     else:
-    #         average_fitness = sum(fitnessv) / len(fitnessv)
-    #         fitness_values.append(average_fitness)
-    
-    
-    # return sum(fitness_values) / len(fitness_values)
 
 def get_duration_fitness_ChiSquared(statistics_df, expected_durations, all_activities):
     # Group by TraceID and Activity, then count the frequency of each activity per trace
@@ -282,13 +197,11 @@ def get_statistics_per_trace(log):
     frequencies = []
     durations = []
     abseluteTimes = []
-    statistics = {}
 
     for caseID in log:
         trace = log[caseID]
         for event in trace:
             activity = event['activity']
-            
             if activity:
                 # Duration dimension in minutes
                 duration = calculate_duration(event['start_timestamp'], event['complete_time'])
@@ -298,14 +211,6 @@ def get_statistics_per_trace(log):
                 durations.append(duration)
                 abseluteTimes.append(abseluteTime)
                 frequencies.append(1)
-                # durations_per_trace[activity] = durations_per_trace.get(activity, 0) + duration
-
-        # # Append data for this trace to the lists
-        # for activity, frequency in freq_per_trace.items():
-        #     caseIDs.append(caseID)
-        #     activities.append(activity)
-        #     frequencies.append(frequency)
-        #     durations.append(durations_per_trace[activity])
 
     # Create a DataFrame
     statistics_df = pd.DataFrame({
@@ -316,11 +221,8 @@ def get_statistics_per_trace(log):
         'Frequency' : frequencies
     })
 
-    # statistics_df['Frequency'] = pd.to_numeric(statistics_df['Frequency'], errors='coerce')
-    # statistics_df['Duration'] = pd.to_numeric(statistics_df['Duration'], errors='coerce')
-
-    # if debugger_is_active():
-    #     print(statistics_df.head())
+    if debugger_is_active():
+        print(statistics_df.head())
 
     return statistics_df
     
